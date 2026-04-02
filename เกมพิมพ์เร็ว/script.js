@@ -1,20 +1,151 @@
-const contents = document.querySelectorAll('.content'); 
+// ==========================================
+// ส่วนที่ 1: ดึงกล่องข้อความและปุ่มต่างๆ จากหน้าเว็บมาเตรียมไว้
+// ==========================================
+const wordEL = document.getElementById('word');         // จุดที่โชว์คำศัพท์ให้พิมพ์ตาม
+const textEL = document.getElementById('text');         // ช่องสำหรับพิมพ์ข้อความ
+const scoreEL = document.getElementById('score');       // ป้ายแสดงคะแนน
+const timeEL = document.getElementById('time');         // ป้ายแสดงเวลาที่เหลือ
 
-document.addEventListener('scroll',showText);
+const btnLevelEL = document.getElementById('level-btn');     // ปุ่มเปิด/ปิด เมนูตั้งค่า
+const settingsEL = document.getElementById('settings');      // แถบเมนูตั้งค่า
+const levelFormEL = document.getElementById('level-form');   // ฟอร์มเลือกระดับความยาก
+const levelEL = document.getElementById('level');            // ตัวเลือก (Dropdown) ระดับความยาก
+const gameoverEL = document.getElementById('gameover-container'); // หน้าจอตอนจบเกม
 
-function showText(){
-    
-    contents.forEach((section)=>{
-        const imgEl = section.querySelector('img');
-        const textEl = section.querySelector('.text');
+// ==========================================
+// ส่วนที่ 2: คลังคำศัพท์ (เมนูของหวานจัดเต็ม!)
+// ==========================================
+const words = ['บัวลอยไข่หวาน', 'ทองหยิบ', 'ทองหยอด', 'ฝอยทอง', /* ... (ขอละไว้เพื่อความสั้น) ... */ 'ช็อกโกแลตเย็น', 'โกโก้ปั่น'];
 
-        const scrollPos = window.pageYOffset;
-        const textPos = imgEl.offsetTop + imgEl.offsetHeight / 50
-        if(scrollPos > textPos){
-            textEl.classList.add('show-reveal');
-        }else{
-            textEl.classList.remove('show-reveal')
-        }
-    });
+// ==========================================
+// ส่วนที่ 3: ตั้งค่าตัวแปรเริ่มต้น (ความจำของเกม)
+// ==========================================
+let randomText; // ตัวแปรเก็บ "คำศัพท์ที่สุ่มได้ในรอบนั้นๆ"
+let score = 0;  // คะแนนเริ่มต้น
+let time = 10;  // เวลาเริ่มต้น (เดี๋ยวจะถูกตั้งค่าใหม่ตอนเริ่มเกมอีกที)
+
+// ดึงระดับความยากที่เคยเล่นไว้จากความจำเครื่อง (Local Storage)
+// ถ้าไม่เคยมีข้อมูล (null) ให้ตั้งค่าเริ่มต้นเป็นโหมดปานกลาง ('medium')
+const saveMode = localStorage.getItem('mode') !== null ? localStorage.getItem('mode') : 'medium';
+let level = 'medium'; // ตัวแปรเก็บระดับความยากปัจจุบัน
+
+// สร้างนาฬิกานับถอยหลัง สั่งให้ทำงานฟังก์ชัน updatetime "ทุกๆ 1 วินาที"
+const timeInterval = setInterval(updatetime, 1000); 
+
+// ==========================================
+// ส่วนที่ 4: กลไกการสุ่มและแสดงคำศัพท์
+// ==========================================
+
+// ฟังก์ชัน "ล้วงไหสุ่มคำศัพท์"
+function getRandomWord(){
+    // ใช้ Math.random() สุ่มเลข แล้วคูณด้วยจำนวนคำศัพท์ทั้งหมด 
+    // ใช้ Math.floor() ปัดเศษทิ้ง จะได้ตัวเลขดัชนี (Index) เอาไปหยิบคำในกล่อง words
+    return words[Math.floor(Math.random() * words.length)];
 }
 
+// ฟังก์ชัน "เอาคำศัพท์ไปแปะบนหน้าจอ"
+function displayWordToUI(){
+    randomText = getRandomWord(); // เรียกตัวสุ่มคำศัพท์
+    wordEL.innerHTML = randomText; // เอาคำที่สุ่มได้ไปโชว์ให้ผู้เล่นเห็น
+    timeEL.innerHTML = time;       // อัปเดตเวลาบนหน้าจอ
+}
+
+// ==========================================
+// ส่วนที่ 5: ระบบตรวจจับการพิมพ์ (เล่นเกม)
+// ==========================================
+// คอยแอบดูช่องพิมพ์ (textEL) ว่าผู้เล่นพิมพ์อะไรเข้ามา (ดักจับ event 'input')
+textEL.addEventListener('input', (e) => {
+    const inputText = e.target.value; // ดึงข้อความที่ผู้เล่นกำลังพิมพ์อยู่มาเช็ค
+    
+    // ถ้าพิมพ์ได้ "ตรงเป๊ะ" กับคำศัพท์ที่สุ่มมาให้
+    if(inputText === randomText){
+        // แจกเวลาเพิ่มตามระดับความยากที่ตั้งไว้ (saveMode)
+        if(saveMode == 'easy'){
+            time += 26; // โหมดง่าย พิมพ์ถูก 1 คำ แจกเวลาจุกๆ 26 วิ
+        } else if(saveMode == 'medium'){
+            time += 5;  // โหมดกลาง แจก 5 วิ
+        } else {
+            time += 4;  // โหมดยาก (hard) แจกแค่ 4 วิ
+        }
+        
+        displayWordToUI(); // สุ่มและโชว์คำศัพท์คำใหม่ทันที
+        updateScore();     // บวกคะแนน
+        e.target.value = ''; // ล้างช่องพิมพ์ให้ว่างเปล่า เตรียมรอพิมพ์คำต่อไป
+    }
+});
+
+// ==========================================
+// ส่วนที่ 6: ระบบคะแนนและเวลา
+// ==========================================
+
+// ฟังก์ชัน "บวกคะแนน"
+function updateScore(){
+    score += 10; // พิมพ์ถูก 1 คำ ได้ 10 คะแนน
+    scoreEL.innerHTML = score; // อัปเดตคะแนนบนหน้าจอ
+}
+
+// ฟังก์ชัน "นับถอยหลัง" (ทำงานทุกๆ 1 วินาทีตามที่ตั้งไว้ด้านบน)
+function updatetime(){
+    time--; // ลดเวลาลงทีละ 1 วินาที
+    timeEL.innerHTML = time; // อัปเดตเวลาบนหน้าจอ
+    
+    // ถ้าเวลาหมด (เหลือ 0)
+    if(time === 0){
+        clearInterval(timeInterval); // สั่งระงับนาฬิกานับถอยหลัง (ไม่งั้นจะติดลบไปเรื่อยๆ)
+        gameOver(); // เรียกหน้าจอจบเกม
+    }
+}
+
+// ==========================================
+// ส่วนที่ 7: ฉากจบเกม (Game Over)
+// ==========================================
+function gameOver(){
+    // สร้างหน้าจอจบเกมแบบ HTML สอดแทรกเข้าไป
+    gameoverEL.innerHTML = `
+    <h1>มันจบเเล้วอานนท์โปรดหยุดเถิด</h1>
+    <p>คะแนนของคุณ = ${score} คะแนน</p>
+    <button onclick="location.reload()">เล่นอีกครั้ง</button> 
+    `; 
+    // หมายเหตุ: location.reload() คือคำสั่งรีเฟรชหน้าเว็บใหม่ทั้งหมดเพื่อเริ่มเล่นใหม่
+    
+    gameoverEL.style.display = 'flex'; // สั่งให้หน้าจอจบเกมเด้งขึ้นมาบังหน้าเว็บไว้
+}
+
+// ==========================================
+// ส่วนที่ 8: ระบบตั้งค่าความยาก (Settings)
+// ==========================================
+
+// เมื่อกดปุ่มตั้งค่า (รูปฟันเฟือง/เมนู)
+btnLevelEL.addEventListener('click', () => {
+    settingsEL.classList.toggle('hide'); // เปิด/ปิด แถบตั้งค่า (สลับคลาส hide เข้าๆ ออกๆ)
+});
+
+// เมื่อมีการเปลี่ยนระดับความยากใน Dropdown
+levelEL.addEventListener('change', (e) => {
+    level = e.target.value; // ดึงค่าที่เลือก (easy, medium, hard)
+    localStorage.setItem("mode", level); // เซฟลงความจำเครื่อง (คราวหน้าเปิดเว็บมาจะได้จำได้ว่าชอบเล่นโหมดไหน)
+});
+
+// ==========================================
+// ส่วนที่ 9: จุดเริ่มต้นของเกม (Start Game)
+// ==========================================
+function startGame(){
+    levelEL.value = saveMode; // ปรับหน้าตา Dropdown ให้ตรงกับค่าที่เซฟไว้ในเครื่อง
+    
+    // ตั้งเวลาเริ่มต้นให้ตอนเปิดเกม (ให้เวลาตั้งต้นไม่เท่ากันตามความยาก)
+    if(saveMode == 'easy'){
+        time = 15;
+    } else if(saveMode == 'medium'){
+        time = 10;
+    } else {
+        time = 7; // โหมดยาก ให้เวลาเริ่มแค่ 7 วินาที
+    }
+    
+    displayWordToUI(); // สุ่มคำศัพท์คำแรกขึ้นมาโชว์
+}
+
+// สั่งเริ่มเกมทันทีที่เปิดเว็บ!
+startGame();
+
+// เอาเคอร์เซอร์ (Cursor) ไปกระพริบรอที่ช่องพิมพ์ข้อความทันที ผู้เล่นจะได้ไม่ต้องเสียเวลาเอาเมาส์ไปคลิก
+textEL.focus();
