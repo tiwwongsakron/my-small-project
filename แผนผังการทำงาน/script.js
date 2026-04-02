@@ -1,31 +1,67 @@
-const drag_item=document.querySelectorAll('.drag-item');
-const drag_list=document.querySelectorAll('.drag-item-list');
+// ==========================================
+// ส่วนที่ 1: เตรียม "สิ่งของ" และ "พื้นที่สำหรับวาง"
+// ==========================================
+// เหมาหา "สิ่งของ" ทุกชิ้นที่สามารถลากได้ (เช่น กล่องข้อความ, การ์ด)
+const drag_item = document.querySelectorAll('.drag-item'); 
 
+// เหมาหา "พื้นที่/ตะกร้า" ทั้งหมดที่เราสามารถเอาของไปวางได้
+const drag_list = document.querySelectorAll('.drag-item-list'); 
+
+// สร้างตัวแปรความจำชั่วคราว เพื่อจดจำว่า "ตอนนี้มือเรากำลังหยิบของชิ้นไหนอยู่?"
 let selectItem;
 
-// รายการ
-drag_item.forEach((item)=>{
-    item.addEventListener('dragstart',onDragStart);
+// ==========================================
+// ส่วนที่ 2: ติดตั้งเซนเซอร์รับรู้การกระทำ (Event Listeners)
+// ==========================================
+
+// 1. ติดตั้งเซนเซอร์ให้ "สิ่งของ" ทุกชิ้น
+drag_item.forEach((item) => {
+    // เมื่อไหร่ที่มีการ "เริ่มลาก" (dragstart) สิ่งของชิ้นนี้ ให้ไปทำงานที่ฟังก์ชัน onDragStart
+    item.addEventListener('dragstart', onDragStart);
 });
 
-// หมวดหมู่
-drag_list.forEach((list)=>{
-    list.addEventListener('dragover',onDragOver);
-    list.addEventListener('dragenter',onDragEnter);
-    list.addEventListener('drop',onDrop);
+// 2. ติดตั้งเซนเซอร์ให้ "พื้นที่/ตะกร้า" ทุกใบ
+drag_list.forEach((list) => {
+    // เมื่อสิ่งของถูกลากมา "อยู่เหนือ" พื้นที่นี้ (ลากวนไปมา)
+    list.addEventListener('dragover', onDragOver);
+    
+    // เมื่อสิ่งของถูกลาก "ข้ามเส้นเข้ามา" ในพื้นที่นี้
+    list.addEventListener('dragenter', onDragEnter);
+    
+    // เมื่อเราปล่อยเมาส์ "วางของ" ลงในพื้นที่นี้
+    list.addEventListener('drop', onDrop);
 });
-function onDrop(){
+
+// ==========================================
+// ส่วนที่ 3: กลไกการทำงานตอนลากและวาง (Functions)
+// ==========================================
+
+// ฟังก์ชันเมื่อเรา "เริ่มหยิบของลาก"
+function onDragStart() {
+    // ให้จำไว้ว่า ของชิ้นที่เรากำลังจับอยู่ตอนนี้ (this) คือชิ้นไหน แล้วเก็บไว้ในตัวแปร selectItem
+    selectItem = this; 
+    console.log(selectItem); // ปริ้นท์ดูใน Console โชว์ให้เห็นว่าเรากำลังหยิบอะไรอยู่
+}
+
+// ฟังก์ชันเมื่อลากของ "ข้ามเส้นเข้ามา" ในพื้นที่
+function onDragEnter(e) {
+    // e.preventDefault() คือการปิดพฤติกรรมดั้งเดิมของเว็บเบราว์เซอร์
+    // (เพราะปกติเว็บเบราว์เซอร์จะตั้งค่าห้ามไม่ให้เราเอาอะไรไปวางมั่วซั่ว เราเลยต้องสั่งปิดข้อห้ามนี้ก่อน)
+    e.preventDefault(); 
+}
+
+// ฟังก์ชันเมื่อลากของ "อยู่เหนือ" พื้นที่
+function onDragOver(e) {
+    // ต้องปิดข้อห้ามของเบราว์เซอร์ตรงนี้ด้วยเหมือนกัน เพื่อเปิดทางให้ระบบรู้ว่า "พื้นที่นี้อนุญาตให้วางของได้นะ"
+    e.preventDefault();
+}
+
+// ฟังก์ชันเมื่อเรา "ปล่อยมือวางของ" ลงพื้นที่
+function onDrop() {
+    // this ในที่นี้หมายถึง "ตะกร้าใบที่เรากำลังปล่อยมือวาง"
+    // .append(selectItem) คือการเอาสิ่งของที่เราจำไว้ตอนเริ่มหยิบ มาต่อท้ายใส่ลงในตะกร้าใบนี้
     this.append(selectItem);
-    selectItem=null;
-}
-function onDragStart(){
-    selectItem=this;
-    console.log(selectItem);
-}
-
-function onDragEnter(e){
-    e.preventDefault();
-}
-function onDragOver(e){
-    e.preventDefault();
+    
+    // พอวางของเสร็จแล้ว ก็ล้างความจำในมือทิ้ง (ทำตัวแปรให้ว่างเปล่า) เตรียมพร้อมไปหยิบชิ้นใหม่ต่อไป
+    selectItem = null;
 }
