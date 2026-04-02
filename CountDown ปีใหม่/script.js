@@ -4,7 +4,7 @@ const minutes = document.getElementById('minutes');
 const seconds = document.getElementById('seconds');
 
 const currentYear = new Date().getFullYear();
-const newYearTime = new Date(`JUNE 10 ${currentYear} 00:00:00`);
+const newYearTime = new Date(`JANUARY ${currentYear + 1} 00:00:00`);
 
 function updateCountDown(){
     const currentTime = new Date();
