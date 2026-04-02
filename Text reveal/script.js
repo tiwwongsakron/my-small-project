@@ -1,20 +1,42 @@
+// ==========================================
+// ส่วนที่ 1: ดึงกล่องเนื้อหาทั้งหมดมาเตรียมไว้
+// ==========================================
+// เหมาหากล่องที่มีคลาส .content ทุกกล่องบนหน้าเว็บ (ในกล่องนี้มักจะมีรูปภาพและข้อความซ่อนอยู่)
 const contents = document.querySelectorAll('.content'); 
 
-document.addEventListener('scroll',showText);
+// ==========================================
+// ส่วนที่ 2: ติดตั้งเซนเซอร์จับการเลื่อนจอ
+// ==========================================
+// คอยจับตาดูว่าถ้าผู้ใช้ "ไถหน้าจอ (scroll)" เมื่อไหร่ ให้เรียกใช้งานฟังก์ชัน showText ทันที
+document.addEventListener('scroll', showText);
 
+// ==========================================
+// ส่วนที่ 3: กลไกคำนวณระยะห่างเพื่อโชว์ข้อความ
+// ==========================================
 function showText(){
     
-    contents.forEach((section)=>{
-        const imgEl = section.querySelector('img');
-        const textEl = section.querySelector('.text');
+    // เอากล่องเนื้อหาทั้งหมดที่หามาได้ มาแกะดูทีละกล่อง (วนลูป)
+    contents.forEach((section) => {
+        // ในแต่ละกล่อง ให้ตามหา "รูปภาพ" และ "ข้อความ" ที่อยู่ข้างในนั้น
+        const imgEl = section.querySelector('img');     // หารูปภาพ
+        const textEl = section.querySelector('.text');  // หาข้อความ (ที่อาจจะซ่อนอยู่ด้วย CSS)
 
-        const scrollPos = window.pageYOffset;
-        const textPos = imgEl.offsetTop + imgEl.offsetHeight / 50
+        // ระยะทางที่เราไถจอ: วัดระยะจากบนสุดของเว็บ ว่าตอนนี้เราไถเลื่อนลงมาลึกแค่ไหนแล้ว
+        const scrollPos = window.pageYOffset; 
+        
+        // จุดชนวน (Trigger Point): คำนวณหาตำแหน่งที่เหมาะสมที่จะให้ข้อความโผล่ออกมา
+        // imgEl.offsetTop = ระยะห่างจากขอบบนสุดเว็บ ไปจนถึงขอบบนของรูปภาพ
+        // imgEl.offsetHeight / 50 = เอาความสูงรูปภาพมาหาร 50 (เพิ่มระยะเผื่อลงไปอีกนิดนึง ให้เลยขอบบนรูปมาหน่อยๆ)
+        const textPos = imgEl.offsetTop + (imgEl.offsetHeight / 50); 
+        
+        // เช็คเงื่อนไข: "เราไถจอลงมา ทะลุผ่านเส้นจุดชนวนหรือยัง?"
         if(scrollPos > textPos){
+            // ถ้าไถเลยจุดชนวนมาแล้ว -> สั่งโชว์ข้อความ! 
+            // (แปะคลาส show-reveal ให้ CSS ทำหน้าที่เล่นแอนิเมชันให้ข้อความเด้งหรือเฟดขึ้นมา)
             textEl.classList.add('show-reveal');
-        }else{
-            textEl.classList.remove('show-reveal')
+        } else {
+            // ถ้ายังไถไม่ถึง (หรือไถกลับขึ้นไปข้างบน) -> ให้ซ่อนข้อความกลับไปเหมือนเดิม
+            textEl.classList.remove('show-reveal');
         }
     });
 }
-
