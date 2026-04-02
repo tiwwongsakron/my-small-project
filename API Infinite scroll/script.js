@@ -1,41 +1,76 @@
-const count=10;
-const apiKey='ESGvpiaFKAQlHRngSs08u2RxCDLs-V7vQNzecmyfdc4';
-const apiUrl=`https://api.unsplash.com/photos/random?client_id=${apiKey}&count=${count}`;
+// ==========================================
+// ส่วนที่ 1: เตรียมตั๋วและที่อยู่ สำหรับไปขอดึงรูปภาพ (API)
+// ==========================================
+const count = 10; // กำหนดว่าจะขอรูปมาทีละกี่รูป (ในที่นี้คือ 10 รูปต่อรอบ)
+const apiKey = 'ESGvpiaFKAQlHRngSs08u2RxCDLs-V7vQNzecmyfdc4'; // กุญแจหรือรหัสผ่าน (API Key) สำหรับเข้าใช้บริการเว็บ Unsplash
+const apiUrl = `https://api.unsplash.com/photos/random?client_id=${apiKey}&count=${count}`; // URL ปลายทางที่เราจะส่งคนไปเอาข้อมูล (แนบรหัสผ่านและจำนวนรูปไปด้วย)
 
+// ==========================================
+// ส่วนที่ 2: เตรียมพื้นที่และกล่องเก็บของ
+// ==========================================
+const imageContainer = document.getElementById('img-container'); // หาพื้นที่บนหน้าเว็บที่จะเอารูปมาวาง
+let photoArrays = []; // สร้างกล่องเปล่าๆ ไว้สำหรับรับข้อมูลรูปภาพที่กำลังจะส่งมา
 
-const imageContainer=document.getElementById('img-container');
-let photoArrays=[];
-
-async function getPhotos(){
-    try{
-        const response = await fetch(apiUrl);
-        photoArrays=await response.json();
-        displayImage();
-    }catch(err){
-        console.log(err);
+// ==========================================
+// ส่วนที่ 3: ฟังก์ชัน "วิ่งไปเอาข้อมูลรูปภาพ" (ทำงานเบื้องหลัง)
+// ==========================================
+// ใช้ async/await เพื่อบอกว่า "ฟังก์ชันนี้ต้องใช้เวลารอนะ" (เหมือนสั่งของเดลิเวอรี่ ต้องรอไรเดอร์ขับมาส่ง)
+async function getPhotos() {
+    try {
+        // ลองพยายามไปดึงข้อมูลดู
+        const response = await fetch(apiUrl); // วิ่งไปเคาะประตูเว็บ Unsplash ตามที่อยู่ แล้ว "รอ" (await) ให้เขาตอบกลับมา
+        photoArrays = await response.json();  // พอเขาตอบกลับมาเป็นก้อนข้อมูล ให้แกะกล่องแปลงเป็นข้อมูลแบบ JSON แล้วใส่ลงกล่อง photoArrays
+        
+        displayImage(); // พอได้ของครบแล้ว ก็เรียกฟังก์ชันให้เอารูปไปโชว์บนหน้าเว็บ
+    } catch (err) {
+        // ถ้าเกิดข้อผิดพลาด (เช่น เน็ตหลุด, เว็บพัง) ให้มาทำตรงนี้แทน
+        console.log("เกิดข้อผิดพลาด: ", err); 
     }
 }
-function displayImage(){
-    photoArrays.forEach((photo)=>{
-        const item=document.createElement('a');
-        item.setAttribute('href',photo.links.html);
-        item.setAttribute('target','_blank');
 
-        const img=document.createElement('img');
-        img.setAttribute('src',photo.urls.regular);
-        img.setAttribute('title',photo.alt_description);
-        img.setAttribute('alt',photo.alt_description);
+// ==========================================
+// ส่วนที่ 4: ฟังก์ชัน "สร้างรูปภาพแปะลงหน้าเว็บ"
+// ==========================================
+function displayImage() {
+    // เอาข้อมูลรูปที่ได้มา แกะทีละอัน (วนลูป)
+    photoArrays.forEach((photo) => {
+        // 1. สร้างแท็ก <a> (เพื่อทำเป็นลิงก์ให้กดได้)
+        const item = document.createElement('a');
+        item.setAttribute('href', photo.links.html); // ตั้งค่าให้ลิงก์ชี้ไปยังหน้าเว็บของรูปนั้นๆ
+        item.setAttribute('target', '_blank');       // ตั้งค่าให้เวลาคลิก ให้เปิดแท็บใหม่เสมอ (_blank)
 
+        // 2. สร้างแท็ก <img> (เพื่อเอารูปมาแสดง)
+        const img = document.createElement('img');
+        img.setAttribute('src', photo.urls.regular); // เอาลิงก์รูปภาพมาใส่ เพื่อให้รูปแสดงขึ้นมา
+        img.setAttribute('title', photo.alt_description); // ใส่คำอธิบายรูป (ตอนเอาเมาส์ไปชี้)
+        img.setAttribute('alt', photo.alt_description);   // ใส่ข้อความแทนรูป (เผื่อเน็ตช้า รูปไม่ขึ้น หรือสำหรับคนตาบอดใช้โปรแกรมอ่านจอ)
+
+        // 3. ประกอบร่าง: เอารูปภาพ (img) ยัดใส่เข้าไปในลิงก์ (a)
         item.appendChild(img);
+        
+        // 4. เอาลิงก์ที่ประกอบเสร็จแล้ว ไปแปะลงบนพื้นที่หน้าเว็บที่เราเตรียมไว้ตอนแรกสุด
         imageContainer.appendChild(item);
     });
 }
-getPhotos();
 
-window.addEventListener('scroll',()=>{
-    if(window.innerHeight+window.scrollY>=document.body.offsetHeight-100){
-        // ดึงภาพมาแสดงผล
-        // alert("ดึงภาพมาแสดงผล");
+// ==========================================
+// ส่วนที่ 5: เริ่มต้นทำงานตอนโหลดหน้าเว็บครั้งแรก
+// ==========================================
+getPhotos(); // พอเปิดเว็บปุ๊บ สั่งให้วิ่งไปเอารูปมาโชว์ก่อนเลย 1 ชุด (10 รูป)
+
+// ==========================================
+// ส่วนที่ 6: กลไก "เลื่อนจอแล้วโหลดเพิ่ม (Infinite Scroll)"
+// ==========================================
+// คอยจับตาดูเวลาผู้ใช้ "ไถหน้าจอ (Scroll)"
+window.addEventListener('scroll', () => {
+    // สูตรคำนวณเช็คว่า "เลื่อนมาใกล้จะถึงขอบล่างสุดของเว็บหรือยัง?"
+    // window.innerHeight = ความสูงของหน้าจอที่เรามองเห็น
+    // window.scrollY = ระยะทางที่เราไถเลื่อนลงมาแล้ว
+    // document.body.offsetHeight = ความสูงของเว็บไซต์ทั้งหน้า (รวมส่วนที่มองไม่เห็น)
+    // - 100 = เผื่อระยะไว้ 100 พิกเซล (ไม่ต้องรอให้ชนขอบเป๊ะๆ แค่ใกล้ๆ ชนขอบก็โหลดรอเลย จะได้ไม่สะดุด)
+    
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+        // ถ้าเข้าเงื่อนไข (แปลว่าไถมาถึงใกล้ล่างสุดแล้ว) ให้วิ่งไปดึงรูปมาเพิ่มอีก 1 ชุด
         getPhotos();
     }
 });
