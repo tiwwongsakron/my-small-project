@@ -1,23 +1,47 @@
+// ==========================================
+// ส่วนที่ 1: ดึงกล่องข้อความจากหน้าเว็บมาเตรียมไว้
+// ==========================================
 const days = document.getElementById('days');
 const hours = document.getElementById('hours');
 const minutes = document.getElementById('minutes');
 const seconds = document.getElementById('seconds');
 
-const currentYear = new Date().getFullYear();
-const newYearTime = new Date(`JANUARY ${currentYear + 1} 00:00:00`);
+// ==========================================
+// ส่วนที่ 2: ตั้งค่า "วันเป้าหมาย" (เปลี่ยนเป็นวันปีใหม่)
+// ==========================================
+const currentYear = new Date().getFullYear(); // เช็คก่อนว่าตอนนี้ปี ค.ศ. อะไร
 
+// ตั้งเป้าไปที่ "วันที่ 1 มกราคม ของปีถัดไป" (เอาปีปัจจุบัน + 1) เวลาเที่ยงคืนตรง
+const newYearTime = new Date(`January 1 ${currentYear + 1} 00:00:00`);
+
+// ==========================================
+// ส่วนที่ 3: ฟังก์ชันคำนวณระยะห่างของเวลา (กลไกหลัก)
+// ==========================================
 function updateCountDown(){
-    const currentTime = new Date();
-    const diff = newYearTime-currentTime;
-    const d = Math.floor(diff/1000/60/60/24);
-    const h = Math.floor(diff/1000/60/60)%24;
-    const m = Math.floor(diff/1000/60)%60;
-    const s = Math.floor(diff/1000)%60;
+    const currentTime = new Date(); // ดึงเวลาปัจจุบัน
+    
+    // เอา "วันปีใหม่" มาลบด้วย "เวลาปัจจุบัน" 
+    const diff = newYearTime - currentTime; 
+    
+    // แปลง "มิลลิวินาที" ให้เป็น วัน/ชั่วโมง/นาที/วินาที
+    const d = Math.floor(diff / 1000 / 60 / 60 / 24); 
+    const h = Math.floor(diff / 1000 / 60 / 60) % 24; 
+    const m = Math.floor(diff / 1000 / 60) % 60; 
+    const s = Math.floor(diff / 1000) % 60; 
 
-    days.innerHTML = d;
-    hours.innerHTML=h<10?'0'+h:h;
-    minutes.innerHTML = m<10?'0'+m:m;
-    seconds.innerHTML = s<10?'0'+s:s;
+// ==========================================
+// ส่วนที่ 4: นำตัวเลขที่คำนวณได้ ไปแสดงบนหน้าเว็บ
+// ==========================================
+    days.innerHTML = d; 
+    
+    // ถ้าตัวเลขน้อยกว่า 10 ให้เติม '0' ข้างหน้า (เช่น 9 เป็น 09)
+    hours.innerHTML = h < 10 ? '0' + h : h;
+    minutes.innerHTML = m < 10 ? '0' + m : m;
+    seconds.innerHTML = s < 10 ? '0' + s : s;
 }
 
-setInterval(updateCountDown,1000);
+// ==========================================
+// ส่วนที่ 5: สั่งให้กลไกทำงาน (เดินเข็มนาฬิกา)
+// ==========================================
+// สั่งให้อัปเดตตัวเลขทุกๆ 1 วินาที (1000 มิลลิวินาที)
+setInterval(updateCountDown, 1000);
